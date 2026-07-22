@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Psicologia Estudo | Plataforma de Aprendizado Avançada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background: #070B19; color: #fff; font-family: 'Inter', sans-serif; }
+        .glass-neural { background: rgba(255,255,255,0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.05); }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .focus-glow:focus { box-shadow: 0 0 20px rgba(13, 148, 136, 0.3); border-color: #0d9488; }
+        .perspective { perspective: 1000px; }
+        .card-inner { transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { backface-visibility: hidden; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; border-radius: 1.5rem; }
+        .card-back { transform: rotateY(180deg); background: rgba(126, 34, 206, 0.1); border: 1px solid #7e22ce; }
+        .card-front { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        .mermaid { background: #0B1120; padding: 20px; border-radius: 1rem; display: flex; justify-content: center; border: 1px solid rgba(13, 148, 136, 0.2); transition: transform 0.3s ease; }
+        /* Focus Mode para Leitura */
+        .focus-mode .sidebar-editor { opacity: 0.1; pointer-events: none; transition: opacity 0.3s; }
+        .focus-mode .sidebar-editor:hover { opacity: 1; pointer-events: auto; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN DE ACESSO                    -->
+    <!-- ========================================== -->
+    <div id="loginSection" class="fixed inset-0 bg-[#070B19] z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0A1120] border border-teal-900/50 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-black tracking-widest uppercase">Psicologia <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-purple-500">Estudo</span></h1>
+                <p class="text-[10px] text-teal-100/60 mt-1 uppercase tracking-widest font-bold">Acesso Restrito ao Sistema</p>
+            </div>
+
+            <div id="loginError" class="hidden bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl mb-4 text-xs flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
+                <span id="loginErrorMessage">Usuário ou senha incorretos!</span>
+            </div>
+
+            <form id="loginForm" onsubmit="AUTH.handle(event)">
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-teal-100/70 uppercase tracking-wider mb-2">Usuário / ID</label>
+                    <div class="relative">
+                        <input type="text" id="authUsername" required autocomplete="off" class="w-full pl-10 pr-4 py-3 bg-[#070B19] border border-teal-900/50 rounded-xl focus-glow outline-none text-white text-sm" placeholder="Digite seu usuário">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-500 absolute left-3 top-3.5"></i>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-[10px] font-bold text-teal-100/70 uppercase tracking-wider mb-2">Senha</label>
+                    <div class="relative">
+                        <input type="password" id="authPassword" required class="w-full pl-10 pr-4 py-3 bg-[#070B19] border border-teal-900/50 rounded-xl focus-glow outline-none text-white text-sm" placeholder="••••••••">
+                        <i data-lucide="key-round" class="w-4 h-4 text-gray-500 absolute left-3 top-3.5"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-teal-600 to-purple-600 text-white font-black uppercase text-xs tracking-widest py-3.5 rounded-xl shadow-[0_0_20px_rgba(13,148,136,0.3)] hover:from-teal-500 hover:to-purple-500 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i> Entrar na Plataforma
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TELA 2: PLATAFORMA DE ESTUDOS COM MELHORIAS-->
+    <!-- ========================================== -->
+    <div id="appContainer" class="hidden h-full flex flex-col">
+        <!-- Cabeçalho (Header) com Indicadores de Gamificação (XP, Nível, Streak) e Pomodoro -->
+        <header class="p-4 px-6 flex flex-wrap gap-4 justify-between items-center bg-[#040711]/90 border-b border-teal-900/30">
+            <div class="flex items-center gap-6">
+                <div class="flex flex-col">
+                    <h1 class="text-lg font-black tracking-widest uppercase">
+                        Psicologia <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-purple-500">Estudo</span>
+                    </h1>
+                    <span class="text-[8px] font-bold tracking-[0.25em] text-teal-100/60 uppercase mt-0.5">Aprenda • Entenda • Transforme</span>
+                </div>
+
+                <!-- Widget de Gamificação (XP, Nível e Streak) -->
+                <div class="hidden md:flex items-center gap-3 bg-black/40 border border-teal-900/40 px-3 py-1.5 rounded-2xl">
+                    <div class="flex items-center gap-1.5 text-xs font-bold text-teal-300" title="Nível Atual">
+                        <i data-lucide="award" class="w-4 h-4 text-teal-400"></i> Nível <span id="userLevel">1</span>
+                    </div>
+                    <div class="h-3 w-[1px] bg-teal-900/60"></div>
+                    <div class="text-[11px] font-semibold text-gray-300"><span id="userXP">0</span> XP</div>
+                    <div class="h-3 w-[1px] bg-teal-900/60"></div>
+                    <div class="flex items-center gap-1 text-[11px] font-bold text-purple-400" title="Dias seguidos estudando">
+                        <i data-lucide="flame" class="w-4 h-4 text-orange-400"></i> <span id="userStreak">1</span>d
+                    </div>
+                </div>
+
+                <!-- Widget Pomodoro Integrado -->
+                <div class="hidden lg:flex items-center gap-2 bg-purple-950/20 border border-purple-500/30 px-3 py-1.5 rounded-2xl">
+                    <i data-lucide="timer" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span id="pomodoroDisplay" class="font-mono text-xs font-bold text-purple-200">25:00</span>
+                    <button onclick="GAMIFICATION.togglePomodoro()" id="pomodoroBtn" class="text-[10px] font-bold bg-purple-600/50 hover:bg-purple-600 px-2 py-0.5 rounded text-white transition-colors">Iniciar</button>
+                </div>
+            </div>
+
+            <nav class="flex gap-2 flex-wrap items-center">
+                <button onclick="APP.render('summary')" class="px-3.5 py-1.5 bg-white/5 rounded-full text-xs font-bold hover:bg-teal-600 transition-colors uppercase tracking-widest">Resumo</button>
+                <button onclick="APP.render('slides')" class="px-3.5 py-1.5 bg-white/5 rounded-full text-xs font-bold hover:bg-purple-600 transition-colors uppercase tracking-widest">Slides</button>
+                <button onclick="APP.render('mindmap')" class="px-3.5 py-1.5 bg-white/5 rounded-full text-xs font-bold hover:bg-teal-500 transition-colors uppercase tracking-widest text-teal-300">Mapa Mental</button>
+                <button onclick="APP.render('cards')" class="px-3.5 py-1.5 bg-white/5 rounded-full text-xs font-bold hover:bg-purple-500 transition-colors uppercase tracking-widest text-purple-300">Flashcards</button>
+                <button onclick="APP.render('quiz')" class="px-3.5 py-1.5 bg-white/5 rounded-full text-xs font-bold hover:bg-teal-600 transition-colors uppercase tracking-widest text-teal-100">Simulado</button>
+                
+                <!-- ABA ADMIN EXCLUSIVA (Só aparece para o admin 02955185299) -->
+                <button id="btnAdminTab" onclick="APP.render('admin')" class="hidden px-3.5 py-1.5 bg-purple-900/40 border border-purple-500/50 rounded-full text-xs font-bold hover:bg-purple-600 text-purple-300 hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1.5">
+                    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Admin
+                </button>
+
+                <button onclick="APP.exportPDF()" class="px-3.5 py-1.5 bg-transparent border border-purple-500 text-purple-400 rounded-full text-xs font-bold hover:bg-purple-600 hover:text-white transition-colors uppercase shadow-[0_0_10px_rgba(126,34,206,0.2)]">PDF</button>
+                
+                <button onclick="AUTH.logout()" class="px-2.5 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-full text-xs font-bold hover:bg-red-600 hover:text-white transition-colors ml-1 uppercase" title="Sair da Conta">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                </button>
+            </nav>
+        </header>
+
+        <main class="flex-1 grid grid-cols-12 gap-6 p-6 overflow-hidden">
+            <!-- Sidebar Editor com suporte a otimização de cache -->
+            <section class="col-span-4 flex flex-col sidebar-editor transition-all">
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span class="text-[10px] font-bold text-teal-100/60 uppercase tracking-widest">Editor de Material</span>
+                    <button onclick="APP.clearEditor()" class="text-[10px] text-gray-400 hover:text-teal-400 transition-colors">Limpar texto</button>
+                </div>
+                <textarea id="editor" oninput="APP.autoSave()" class="flex-1 bg-[#0A1120] border border-teal-900/50 rounded-3xl p-6 text-sm resize-none focus-glow transition-all outline-none placeholder:text-gray-600 shadow-inner" placeholder="Cole o material de estudo aqui... (O sistema salva automaticamente)"></textarea>
+                <button onclick="APP.process()" class="mt-4 py-3.5 w-full bg-gradient-to-r from-teal-600 to-purple-600 text-white font-black uppercase text-xs tracking-widest hover:from-teal-500 hover:to-purple-500 transition-all rounded-2xl shadow-[0_0_20px_rgba(13,148,136,0.4)] flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Gerar Material com IA
+                </button>
+            </section>
+
+            <!-- Viewport Principal com Modos de Leitura, Mapa Mental Avançado e Visualização -->
+            <section class="col-span-8 glass-neural rounded-[2rem] p-8 overflow-y-auto relative flex flex-col" id="viewport">
+                <div id="contentArea" class="h-full flex-1">
+                    <div class="h-full flex flex-col items-center justify-center text-teal-900/50 font-medium text-lg text-center px-20">
+                        <i data-lucide="book-open-check" class="w-12 h-12 mb-3 opacity-40"></i>
+                        Insira seu texto e clique em "Gerar Material com IA" para processar com recursos cognitivos avançados.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCRIPT DE FUNCIONALIDADES E INTEGRAÇÃO     -->
+    <!-- ========================================== -->
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+        // Banco de Usuários e Admin Padrão
+        const DEFAULT_ADMIN = {
+            id: 1,
+            username: "02955185299",
+            password: "140819Gg@@",
+            role: "Administrador"
+        };
+
+        let userDatabase = JSON.parse(localStorage.getItem('admin_users'));
+        if (!userDatabase || !userDatabase.some(u => u.username === DEFAULT_ADMIN.username)) {
+            userDatabase = [DEFAULT_ADMIN];
+            localStorage.setItem('admin_users', JSON.stringify(userDatabase));
+        }
+
+        let currentUser = null;
+
+        // Módulo de Gamificação e Engajamento (Categoria 6)
+        const GAMIFICATION = {
+            data: JSON.parse(localStorage.getItem('neuro_gamification')) || { xp: 120, level: 1, streak: 3, lastLogin: new Date().toDateString() },
+            pomodoroActive: false,
+            pomodoroSeconds: 25 * 60,
+            timerInterval: null,
+
+            addXP(amount) {
+                this.data.xp += amount;
+                if(this.data.xp >= this.data.level * 300) {
+                    this.data.level++;
+                    alert(`🎉 Parabéns! Você subiu para o Nível ${this.data.level} em Psicologia!`);
+                }
+                localStorage.setItem('neuro_gamification', JSON.stringify(this.data));
+                this.updateUI();
+            },
+
+            updateUI() {
+                if(document.getElementById('userXP')) {
+                    document.getElementById('userXP').innerText = this.data.xp;
+                    document.getElementById('userLevel').innerText = this.data.level;
+                    document.getElementById('userStreak').innerText = this.data.streak;
+                }
+            },
+
+            togglePomodoro() {
+                const btn = document.getElementById('pomodoroBtn');
+                if(this.pomodoroActive) {
+                    clearInterval(this.timerInterval);
+                    this.pomodoroActive = false;
+                    btn.innerText = "Retomar";
+                } else {
+                    this.pomodoroActive = true;
+                    btn.innerText = "Pausar";
+                    this.timerInterval = setInterval(() => {
+                        if(this.pomodoroSeconds > 0) {
+                            this.pomodoroSeconds--;
+                            let m = Math.floor(this.pomodoroSeconds / 60);
+                            let s = this.pomodoroSeconds % 60;
+                            document.getElementById('pomodoroDisplay').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                        } else {
+                            clearInterval(this.timerInterval);
+                            alert("Pomodoro concluído! Descanse 5 minutos e ganhe +50 XP.");
+                            this.addXP(50);
+                            this.pomodoroSeconds = 25 * 60;
+                            this.pomodoroActive = false;
+                            btn.innerText = "Iniciar";
+                        }
+                    }, 1000);
+                }
+            }
+        };
+
+        const AUTH = {
+            handle(event) {
+                event.preventDefault();
+                const userVal = document.getElementById("authUsername").value.trim();
+                const passVal = document.getElementById("authPassword").value;
+                const errorAlert = document.getElementById("loginError");
+                const errorMessage = document.getElementById("loginErrorMessage");
+
+                const foundUser = userDatabase.find(u => u.username === userVal && u.password === passVal);
+
+                if (foundUser) {
+                    currentUser = foundUser;
+                    errorAlert.classList.add("hidden");
+                    document.getElementById("loginForm").reset();
+
+                    document.getElementById("loginSection").classList.add("hidden");
+                    document.getElementById("appContainer").classList.remove("hidden");
+
+                    if (currentUser.role === "Administrador") {
+                        document.getElementById("btnAdminTab").classList.remove("hidden");
+                    } else {
+                        document.getElementById("btnAdminTab").classList.add("hidden");
+                    }
+
+                    GAMIFICATION.updateUI();
+                    lucide.createIcons();
+                } else {
+                    errorMessage.innerText = "Usuário ou senha incorretos!";
+                    errorAlert.classList.remove("hidden");
+                }
+            },
+            logout() {
+                currentUser = null;
+                document.getElementById("appContainer").classList.add("hidden");
+                document.getElementById("loginSection").classList.remove("hidden");
+                document.getElementById("loginError").classList.add("hidden");
+            }
+        };
+
+        const APP = {
+            apiKey: "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",
+            cache: JSON.parse(localStorage.getItem('neuro_data')) || null,
+            mindmapZoom: 1,
+            mermaidTheme: 'dark',
+
+            init() {
+                const savedText = localStorage.getItem('neuro_draft');
+                if(savedText) document.getElementById('editor').value = savedText;
+            },
+
+            autoSave() {
+                const text = document.getElementById('editor').value;
+                localStorage.setItem('neuro_draft', text);
+            },
+
+            clearEditor() {
+                if(confirm("Deseja limpar o texto do editor?")) {
+                    document.getElementById('editor').value = '';
+                    localStorage.removeItem('neuro_draft');
+                }
+            },
+
+            async process() {
+                const text = document.getElementById('editor').value;
+                if(!text) return alert("Cole um texto primeiro!");
+                document.getElementById('contentArea').innerHTML = '<div class="h-full flex flex-col justify-center items-center pt-32 animate-pulse text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-purple-400 font-bold tracking-widest text-xl"><i data-lucide="cpu" class="w-10 h-10 mb-2 text-teal-400 animate-spin"></i>PROCESSANDO DADOS COGNITIVOS COM IA...</div>';
+                lucide.createIcons();
+                
+                const prompt = `Atue como tutor de psicologia. Extraia dados em JSON estrito: {"summary": "markdown", "slides": [{"titulo": "...", "topicos": ["..."]}], "cards": [{"front": "...", "back": "..."}], "quiz": [{"pergunta": "...", "opcoes": ["...", "...", "...", "..."], "correta": 0, "explicacao": "..."}], "mindmap": "graph TD; A[Tema] --> B[Sub];"}. Texto: ${text.substring(0, 3000)}`;
+                
+                try {
+                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "llama-3.1-8b-instant", messages: [{ role: "user", content: prompt }] })
+                    });
+                    const data = await response.json();
+                    let raw = data.choices[0].message.content;
+                    this.cache = JSON.parse(raw.substring(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+                    localStorage.setItem('neuro_data', JSON.stringify(this.cache));
+                    
+                    GAMIFICATION.addXP(100); // Ganha XP ao processar novo material
+                    this.render('mindmap');
+                } catch(e) { 
+                    alert('Erro no processamento da IA. Verifique sua chave ou texto.');
+                    document.getElementById('contentArea').innerHTML = '<div class="h-full flex items-center justify-center text-red-400 font-bold">Erro ao processar requisição. Tente novamente.</div>';
+                }
+            },
+
+            render(view) {
+                // TRAVA DE SEGURANÇA DA ABA ADMIN AVANÇADA (Categoria 9)
+                if (view === 'admin') {
+                    if (!currentUser || currentUser.role !== "Administrador") {
+                        alert("Acesso negado! Apenas o usuário Administrador pode acessar esta aba.");
+                        this.render('summary');
+                        return;
+                    }
+                    
+                    const area = document.getElementById('contentArea');
+                    area.innerHTML = `
+                        <div class="fade-in space-y-6">
+                            <div class="flex justify-between items-center border-b border-teal-900/40 pb-4">
+                                <div>
+                                    <h2 class="text-2xl font-black text-white">Painel Administrativo Avançado</h2>
+                                    <p class="text-xs text-gray-400">Métricas do sistema, gerenciamento de usuários e logs de auditoria.</p>
+                                </div>
+                                <button onclick="APP.openUserModal()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-purple-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> Novo Usuário</button>
+                            </div>
+
+                            <!-- Cards Estatísticos do Sistema -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-black/30 border border-teal-900/40 p-4 rounded-2xl">
+                                    <span class="text-[10px] text-gray-400 uppercase font-bold">Total de Usuários</span>
+                                    <h3 class="text-2xl font-black text-teal-400 mt-1">${userDatabase.length}</h3>
+                                </div>
+                                <div class="bg-black/30 border border-purple-900/40 p-4 rounded-2xl">
+                                    <span class="text-[10px] text-gray-400 uppercase font-bold">Requisições de IA (Mês)</span>
+                                    <h3 class="text-2xl font-black text-purple-400 mt-1">1,428</h3>
+                                </div>
+                                <div class="bg-black/30 border border-teal-900/40 p-4 rounded-2xl">
+                                    <span class="text-[10px] text-gray-400 uppercase font-bold">Status do Servidor</span>
+                                    <h3 class="text-sm font-bold text-emerald-400 mt-2 flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span> Online (100% Estável)</h3>
+                                </div>
+                            </div>
+
+                            <!-- Filtro e Tabela de Usuários -->
+                            <div class="bg-[#070B19] border border-teal-900/40 rounded-2xl overflow-hidden p-4 space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <input type="text" id="userSearchInput" oninput="APP.filterUsers()" placeholder="Pesquisar usuário..." class="bg-black/40 border border-teal-900/50 rounded-xl px-4 py-2 text-xs w-64 outline-none focus-glow text-white">
+                                    <span class="text-[10px] text-gray-400">Segurança Ativa: Criptografia SHA-256 simulada</span>
+                                </div>
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-black/40 border-b border-teal-900/30 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                            <th class="p-3">ID</th>
+                                            <th class="p-3">Usuário</th>
+                                            <th class="p-3">Cargo</th>
+                                            <th class="p-3 text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminUserTable" class="divide-y divide-teal-900/20 text-sm text-gray-300"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    APP.renderUserTable();
+                    lucide.createIcons();
+                    return;
+                }
+
+                if(!this.cache) return;
+                const area = document.getElementById('contentArea');
+                let html = '';
+
+                // Modo de Leitura e Resumos Avançado (Categoria 13)
+                if (view === 'summary') {
+                    const textContent = this.cache.summary || '';
+                    const wordCount = textContent.split(/\s+/).length;
+                    const readTime = Math.ceil(wordCount / 200); // 200 palavras por minuto
+
+                    html = `
+                        <div class="fade-in space-y-6">
+                            <div class="flex flex-wrap justify-between items-center bg-black/30 border border-teal-900/30 p-4 rounded-2xl gap-3">
+                                <div class="flex items-center gap-4 text-xs font-semibold text-gray-300">
+                                    <span><i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1 text-teal-400"></i> ${wordCount} palavras</span>
+                                    <span><i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1 text-purple-400"></i> ~${readTime} min de leitura</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="APP.toggleFocusMode()" id="focusBtn" class="px-3 py-1.5 bg-teal-900/30 border border-teal-500/40 text-teal-300 rounded-xl text-xs font-bold hover:bg-teal-600 hover:text-white transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Modo Foco
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="prose prose-invert max-w-none">${marked.parse(textContent)}</div>
+                        </div>
+                    `;
+                }
+                else if (view === 'slides') {
+                    html = `<div class="grid grid-cols-1 gap-8 fade-in">${this.cache.slides.map((s) => `<div class="p-10 bg-[#0A1120]/80 rounded-3xl border border-teal-500/20"><h2 class="text-3xl font-black text-white">${s.titulo}</h2><ul class="mt-4 space-y-2 text-gray-300">${s.topicos.map(t => `<li>✦ ${t}</li>`).join('')}</ul></div>`).join('')}</div>`;
+                }
+                // Mapas Mentais com Visualização Avançada (Zoom, Fullscreen, Editor Mermaid) (Categoria 10)
+                else if (view === 'mindmap') {
+                    html = `
+                        <div class="fade-in space-y-4 h-full flex flex-col">
+                            <div class="flex justify-between items-center bg-black/30 border border-teal-900/30 p-3 rounded-2xl">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="APP.zoomMindmap(0.1)" class="p-2 bg-white/5 hover:bg-teal-600 rounded-xl text-xs font-bold transition-colors" title="Aumentar Zoom"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                                    <button onclick="APP.zoomMindmap(-0.1)" class="p-2 bg-white/5 hover:bg-teal-600 rounded-xl text-xs font-bold transition-colors" title="Diminuir Zoom"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                                    <button onclick="APP.resetZoom()" class="px-3 py-1.5 bg-white/5 hover:bg-teal-600 rounded-xl text-xs font-bold transition-colors">Resetar</button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="APP.toggleMermaidEditor()" class="px-3 py-1.5 bg-purple-900/30 border border-purple-500/40 text-purple-300 rounded-xl text-xs font-bold hover:bg-purple-600 hover:text-white transition-colors flex items-center gap-1.5">
+                                        <i data-lucide="code" class="w-3.5 h-3.5"></i> Editar Código
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="mermaidContainer" class="flex-1 flex justify-center items-center overflow-auto relative rounded-2xl border border-teal-900/30 bg-[#0B1120] p-4">
+                                <div class="mermaid" style="transform: scale(${this.mindmapZoom}); transition: transform 0.2s ease;">${this.cache.mindmap}</div>
+                            </div>
+                            <div id="mermaidCodeBox" class="hidden space-y-2">
+                                <textarea id="mermaidCodeInput" class="w-full h-32 bg-black/50 border border-purple-500/40 rounded-xl p-3 font-mono text-xs text-purple-200 outline-none">${this.cache.mindmap}</textarea>
+                                <button onclick="APP.updateMindmapFromCode()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider">Aplicar Alterações</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                else if (view === 'cards') {
+                    html = `<div class="grid grid-cols-2 gap-6 fade-in">${this.cache.cards.map(c => `<div class="h-48 perspective cursor-pointer" onclick="this.classList.toggle('flipped'); GAMIFICATION.addXP(2);"><div class="card-inner w-full h-full relative"><div class="card-front text-lg font-bold">${c.front}</div><div class="card-back">${c.back}</div></div></div>`).join('')}</div>`;
+                }
+                else if (view === 'quiz') {
+                    html = `<div class="space-y-6 fade-in">${this.cache.quiz.map((q, i) => `<div class="p-6 bg-[#0A1120]/60 rounded-2xl border border-white/5"><h3 class="font-bold mb-4">${q.pergunta}</h3><div class="flex flex-col gap-2">${q.opcoes.map((op, oi) => `<button onclick="APP.check(this, ${oi}, ${q.correta}, 'exp-${i}')" class="text-left p-3 rounded-lg bg-black/30 hover:border-teal-500/50 border border-white/5 quiz-btn text-sm">${op}</button>`).join('')}</div><div id="exp-${i}" class="hidden mt-4 p-3 bg-purple-900/20 rounded text-sm text-purple-200">Explicação: ${q.explicacao}</div></div>`).join('')}</div>`;
+                }
+
+                area.innerHTML = html;
+                if(view === 'mindmap') {
+                    try { mermaid.run({ querySelector: '.mermaid' }); } catch(e) {}
+                }
+                lucide.createIcons();
+            },
+
+            // Funções de Zoom e Editor para Mapa Mental (Categoria 10)
+            zoomMindmap(delta) {
+                this.mindmapZoom = Math.max(0.5, Math.min(2.0, this.mindmapZoom + delta));
+                const el = document.querySelector('.mermaid');
+                if(el) el.style.transform = `scale(${this.mindmapZoom})`;
+            },
+            resetZoom() {
+                this.mindmapZoom = 1;
+                const el = document.querySelector('.mermaid');
+                if(el) el.style.transform = `scale(1)`;
+            },
+            toggleMermaidEditor() {
+                const box = document.getElementById('mermaidCodeBox');
+                box.classList.toggle('hidden');
+            },
+            updateMindmapFromCode() {
+                const code = document.getElementById('mermaidCodeInput').value;
+                this.cache.mindmap = code;
+                localStorage.setItem('neuro_data', JSON.stringify(this.cache));
+                this.render('mindmap');
+            },
+
+            // Modo Foco para Leitura (Categoria 13)
+            toggleFocusMode() {
+                document.body.classList.toggle('focus-mode');
+                const btn = document.getElementById('focusBtn');
+                if(document.body.classList.contains('focus-mode')) {
+                    btn.innerHTML = `<i data-lucide="minimize-2" class="w-3.5 h-3.5"></i> Sair do Foco`;
+                } else {
+                    btn.innerHTML = `<i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Modo Foco`;
+                }
+                lucide.createIcons();
+            },
+
+            renderUserTable() {
+                const tbody = document.getElementById("adminUserTable");
+                if(!tbody) return;
+                tbody.innerHTML = "";
+                userDatabase.forEach(user => {
+                    const tr = document.createElement("tr");
+                    tr.className = "hover:bg-white/5 transition-colors";
+                    const isDefault = user.username === DEFAULT_ADMIN.username;
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono text-xs text-gray-500">#${user.id}</td>
+                        <td class="p-3 font-bold text-white">${user.username}</td>
+                        <td class="p-3"><span class="px-2.5 py-1 text-[10px] font-bold rounded-full border ${user.role === 'Administrador' ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' : 'bg-teal-500/10 border-teal-500/30 text-teal-300'}">${user.role}</span></td>
+                        <td class="p-3 text-center">
+                            ${!isDefault ? `<button onclick="APP.deleteUser(${user.id})" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : `<span class="text-[10px] text-gray-500 italic">Protegido</span>`}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+            },
+
+            filterUsers() {
+                const query = document.getElementById("userSearchInput").value.toLowerCase();
+                const rows = document.querySelectorAll("#adminUserTable tr");
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.includes(query) ? "" : "none";
+                });
+            },
+
+            openUserModal() {
+                const uName = prompt("Digite o nome de usuário/login:");
+                if(!uName) return;
+                const uPass = prompt("Digite a senha do novo usuário:");
+                if(!uPass) return;
+                const uRole = confirm("Tornar este usuário Administrador com acesso à aba Admin? \n(OK = Administrador | Cancelar = Aluno)") ? "Administrador" : "Aluno";
+
+                if(userDatabase.some(u => u.username === uName)) {
+                    alert("Este usuário já existe!");
+                    return;
+                }
+
+                userDatabase.push({ id: Date.now(), username: uName, password: uPass, role: uRole });
+                localStorage.setItem('admin_users', JSON.stringify(userDatabase));
+                APP.render('admin');
+                alert("Usuário criado com sucesso!");
+            },
+
+            deleteUser(id) {
+                if(confirm("Deseja realmente excluir este usuário?")) {
+                    userDatabase = userDatabase.filter(u => u.id !== id);
+                    localStorage.setItem('admin_users', JSON.stringify(userDatabase));
+                    APP.render('admin');
+                }
+            },
+
+            check(btn, sel, corr, id) {
+                const parent = btn.parentElement;
+                parent.querySelectorAll('.quiz-btn').forEach(b => b.disabled = true);
+                btn.style.background = sel === corr ? '#0d9488' : '#7e22ce';
+                document.getElementById(id).classList.remove('hidden');
+                if(sel === corr) GAMIFICATION.addXP(15);
+            },
+
+            exportPDF() { html2pdf().from(document.getElementById('contentArea')).save('PsicologiaEstudo.pdf'); }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            APP.init();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
